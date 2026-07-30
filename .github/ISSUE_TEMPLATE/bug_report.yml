@@ -1,0 +1,132 @@
+name: Bug report
+description: Something is broken or behaves unexpectedly
+title: "[bug]: "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to file a report.
+
+        ⚠️ **Do not report security vulnerabilities here.** Please follow
+        [SECURITY.md](https://github.com/jv-gomes/claude-tray/blob/main/SECURITY.md)
+        and open a private advisory instead.
+
+        🔒 **Please redact any tokens, account identifiers, or personal file paths**
+        from logs and screenshots before posting.
+
+  - type: checkboxes
+    id: preflight
+    attributes:
+      label: Preflight
+      options:
+        - label: I searched existing issues and this is not a duplicate
+          required: true
+        - label: I am using the latest release or the current `main`
+          required: true
+        - label: I have removed any credentials from the information below
+          required: true
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: Describe the actual behaviour.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect to happen?
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Start Claude Tray with ...
+        2. Hover the tray icon
+        3. See ...
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Claude Tray version
+      description: Output of `claude-tray --version`, or the commit hash if built from source.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      options:
+        - Linux
+        - macOS
+        - Windows
+    validations:
+      required: true
+
+  - type: input
+    id: os-version
+    attributes:
+      label: OS version
+      placeholder: "Ubuntu 24.04, macOS 15.2, Windows 11 23H2"
+    validations:
+      required: true
+
+  - type: input
+    id: desktop
+    attributes:
+      label: Desktop environment and display server (Linux only)
+      description: |
+        This matters a great deal for tray bugs. Note that GNOME requires the
+        AppIndicator extension to show tray icons at all.
+      placeholder: "GNOME 46 / Wayland, KDE Plasma 6 / X11, Sway + Waybar"
+
+  - type: dropdown
+    id: install-method
+    attributes:
+      label: How did you install it?
+      options:
+        - GitHub Release binary
+        - Built from source
+        - Package manager (AUR, Homebrew, winget, ...)
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: provider
+    attributes:
+      label: Which usage provider is active?
+      description: Shown in the About dialog, or in `--doctor` output.
+
+  - type: textarea
+    id: doctor
+    attributes:
+      label: Diagnostics
+      description: |
+        Output of `claude-tray --doctor`. This is designed to be safe to paste publicly,
+        but please skim it before posting.
+      render: shell
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant log output
+      description: |
+        Run with `--verbose` and paste the relevant portion. Logs are redacted by design,
+        but please double-check before posting.
+      render: shell
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else?
+      description: Screenshots, related issues, workarounds you found.

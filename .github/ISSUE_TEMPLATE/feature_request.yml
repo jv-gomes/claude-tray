@@ -1,0 +1,95 @@
+name: Feature request
+description: Suggest an improvement or a new capability
+title: "[feat]: "
+labels: ["enhancement", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the suggestion.
+
+        Claude Tray deliberately aims to stay small: a tray icon, a tooltip, a menu, and
+        notifications. Proposals that keep the idle footprint tiny and the interface
+        glanceable are the easiest to accept.
+
+  - type: checkboxes
+    id: preflight
+    attributes:
+      label: Preflight
+      options:
+        - label: I searched existing issues and discussions for this idea
+          required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: |
+        Describe the situation you are in, not the solution you have in mind. This is the
+        most useful part of the report — it often reveals a simpler answer.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: What would you like Claude Tray to do?
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives you considered
+      description: Including any workarounds you are using today.
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Which area does this touch?
+      multiple: true
+      options:
+        - Tray icon and appearance
+        - Tooltip
+        - Menu
+        - Notifications
+        - Usage data providers
+        - Authentication
+        - Configuration
+        - History and statistics
+        - Packaging and installation
+        - CLI
+        - Integrations (Waybar, Polybar, GNOME, KDE, ...)
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: platforms
+    attributes:
+      label: Which platforms would this apply to?
+      multiple: true
+      options:
+        - Linux
+        - macOS
+        - Windows
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: constraints
+    attributes:
+      label: Project constraints
+      description: |
+        Claude Tray targets under 15 MB idle memory, negligible idle CPU, no telemetry,
+        and never consumes Claude quota on the user's behalf.
+      options:
+        - label: I believe this proposal is compatible with those constraints
+
+  - type: checkboxes
+    id: contribute
+    attributes:
+      label: Contribution
+      options:
+        - label: I would be willing to work on this

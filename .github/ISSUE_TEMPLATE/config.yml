@@ -1,0 +1,17 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 💬 Question or general discussion
+    url: https://github.com/jv-gomes/claude-tray/discussions
+    about: Ask questions, share your setup, or propose an idea before filing an issue.
+
+  - name: 🔒 Report a security vulnerability
+    url: https://github.com/jv-gomes/claude-tray/security/advisories/new
+    about: Please report vulnerabilities privately, never in a public issue.
+
+  - name: 🖥️ Tray icon not appearing on GNOME
+    url: https://extensions.gnome.org/extension/615/appindicator-support/
+    about: GNOME needs the AppIndicator extension to display tray icons. This is not a Claude Tray bug.
+
+  - name: 📖 Documentation
+    url: https://github.com/jv-gomes/claude-tray/tree/main/docs
+    about: Installation, configuration, troubleshooting, and architecture notes.

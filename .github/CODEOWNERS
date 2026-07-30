@@ -1,0 +1,13 @@
+# Every change requires review from the maintainer.
+# See https://docs.github.com/articles/about-code-owners
+*       @jv-gomes
+
+# Security-sensitive and policy files — flagged explicitly so a change here is
+# never reviewed casually.
+/SECURITY.md            @jv-gomes
+/CODE_OF_CONDUCT.md     @jv-gomes
+/LICENSE-MIT            @jv-gomes
+/LICENSE-APACHE         @jv-gomes
+/.github/               @jv-gomes
+/deny.toml              @jv-gomes
+/docs/adr/              @jv-gomes

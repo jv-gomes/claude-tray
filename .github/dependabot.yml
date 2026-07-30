@@ -1,0 +1,39 @@
+version: 2
+updates:
+  - package-ecosystem: cargo
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+      - rust
+    commit-message:
+      prefix: "build(deps)"
+      prefix-development: "build(deps-dev)"
+    groups:
+      # Patch and minor bumps arrive as a single PR to keep review load sane.
+      # Major bumps stay separate so they get individual scrutiny.
+      cargo-minor-patch:
+        update-types:
+          - minor
+          - patch
+
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+      - ci
+    commit-message:
+      prefix: "ci(deps)"
+    groups:
+      actions-all:
+        patterns:
+          - "*"
