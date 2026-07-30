@@ -1,0 +1,14 @@
+# Deliberately close to rustfmt defaults, so contributors get the formatting they
+# already expect.
+#
+# Stable-only by policy. Options such as `wrap_comments`, `comment_width`,
+# `format_code_in_doc_comments`, and `imports_granularity` are attractive but are
+# nightly-only: on stable rustfmt they are ignored with a warning, which means CI
+# and local runs would silently disagree with the config. They stay out until the
+# project is willing to pin a nightly toolchain purely for formatting.
+#
+# Consequence: long doc comments are not auto-wrapped. Please wrap them by hand at
+# roughly 100 columns.
+edition = "2024"
+max_width = 100
+newline_style = "Unix"

@@ -1,0 +1,25 @@
+# Clippy reads the MSRV from `rust-version` in Cargo.toml, so it is not repeated
+# here.
+
+# A tray application is mostly small state transitions. Anything scoring above
+# this is a sign the logic wants splitting.
+cognitive-complexity-threshold = 20
+
+# Types crossing a function boundary by value should stay small; larger ones
+# should be passed by reference.
+too-many-arguments-threshold = 6
+
+# Doc comments referring to these should not be flagged for missing backticks.
+doc-valid-idents = [
+    "AppIndicator",
+    "ClaudeTray",
+    "GNOME",
+    "HiDPI",
+    "KDE",
+    "MacOS",
+    "PKCE",
+    "StatusNotifierItem",
+    "Wayland",
+    "WebSocket",
+    "..",
+]

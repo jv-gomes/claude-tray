@@ -1,0 +1,12 @@
+[toolchain]
+channel = "stable"
+components = ["rustfmt", "clippy"]
+profile = "minimal"
+
+# Contributors: rustup reads this file automatically, so `cargo build` in this
+# repository will select the pinned toolchain and install the components above
+# on first use. No manual `rustup component add` is needed.
+#
+# The MSRV is declared separately as `rust-version` in Cargo.toml and is checked
+# by a dedicated CI job, because this file tracks the *current* stable toolchain
+# rather than the minimum supported one.
