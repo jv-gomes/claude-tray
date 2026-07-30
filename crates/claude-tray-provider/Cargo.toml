@@ -1,0 +1,25 @@
+[package]
+name = "claude-tray-provider"
+description = "Usage data sources for Claude Tray, behind a common provider trait."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+authors.workspace = true
+keywords.workspace = true
+categories.workspace = true
+
+[dependencies]
+claude-tray-core = { path = "../claude-tray-core", version = "0.0.0" }
+
+[features]
+default = ["mock"]
+
+# Synthetic usage data. Enabled by default so the UI can be developed and tested
+# without Claude credentials.
+mock = []
+
+[lints]
+workspace = true

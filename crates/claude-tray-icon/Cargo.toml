@@ -1,0 +1,18 @@
+[package]
+name = "claude-tray-icon"
+description = "Battery-style tray icon rendering for Claude Tray."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+authors.workspace = true
+keywords.workspace = true
+categories.workspace = true
+
+[dependencies]
+claude-tray-core = { path = "../claude-tray-core", version = "0.0.0" }
+
+[lints]
+workspace = true

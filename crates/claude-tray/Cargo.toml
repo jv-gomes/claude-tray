@@ -1,0 +1,33 @@
+[package]
+name = "claude-tray"
+description = "Monitor your Claude usage from the system tray, like a laptop battery indicator."
+readme = "../../README.md"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+authors.workspace = true
+keywords.workspace = true
+categories.workspace = true
+
+# Keep the published package small: assets, fixtures, and golden images are not
+# needed to build from a crates.io tarball.
+exclude = [
+    "tests/fixtures/**",
+    "tests/golden/**",
+    "assets/**",
+]
+
+[[bin]]
+name = "claude-tray"
+path = "src/main.rs"
+
+[dependencies]
+claude-tray-core = { path = "../claude-tray-core", version = "0.0.0" }
+claude-tray-icon = { path = "../claude-tray-icon", version = "0.0.0" }
+claude-tray-provider = { path = "../claude-tray-provider", version = "0.0.0" }
+
+[lints]
+workspace = true

@@ -1,0 +1,80 @@
+[workspace]
+resolver = "3"
+members = ["crates/*"]
+
+# ---------------------------------------------------------------------------
+# Shared package metadata. Every crate inherits these with `field.workspace = true`
+# so version, licence, and repository never drift between crates.
+# ---------------------------------------------------------------------------
+[workspace.package]
+version = "0.0.0"
+edition = "2024"
+rust-version = "1.95"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/jv-gomes/claude-tray"
+homepage = "https://github.com/jv-gomes/claude-tray"
+authors = ["João Vitor"]
+keywords = ["claude", "tray", "systray", "usage", "monitor"]
+categories = ["command-line-utilities", "gui"]
+
+# ---------------------------------------------------------------------------
+# Shared dependency versions.
+#
+# Intentionally empty. Per the dependency policy in CONTRIBUTING.md, every
+# dependency must be justified when it is introduced, so entries are added by
+# the phase that first needs them rather than speculatively up front.
+#
+# When adding one: pin the version here, disable default features, and have
+# member crates reference it with `foo.workspace = true`.
+# ---------------------------------------------------------------------------
+[workspace.dependencies]
+
+# ---------------------------------------------------------------------------
+# Lints, applied workspace-wide via `[lints] workspace = true` in each crate.
+#
+# Lint *groups* carry `priority = -1` so that the specific lints below can
+# override them; without it the ordering is unspecified.
+# ---------------------------------------------------------------------------
+[workspace.lints.rust]
+unsafe_code = "forbid"
+missing_docs = "warn"
+missing_debug_implementations = "warn"
+unreachable_pub = "warn"
+rust_2018_idioms = { level = "warn", priority = -1 }
+
+[workspace.lints.clippy]
+pedantic = { level = "warn", priority = -1 }
+
+# A tray app that panics disappears from the user's tray with no explanation.
+# Library code returns Result instead. Tests opt out via a crate-level
+# `cfg_attr(test, allow(...))` — see any lib.rs.
+unwrap_used = "deny"
+expect_used = "warn"
+panic = "deny"
+
+# Correctness and clarity beyond pedantic.
+todo = "warn"
+unimplemented = "warn"
+dbg_macro = "warn"
+print_stderr = "allow"
+missing_errors_doc = "warn"
+missing_panics_doc = "warn"
+
+# ---------------------------------------------------------------------------
+# Build profiles
+# ---------------------------------------------------------------------------
+[profile.release]
+lto = "thin"
+codegen-units = 1
+strip = "symbols"
+# NOTE: `panic = "abort"` means `cargo test --release` will not work, because
+# libtest needs unwinding to catch `#[should_panic]`. Run tests on the default
+# dev profile (`cargo test`), which is what CI does.
+panic = "abort"
+
+# Profile used for published release artifacts, optimised for size over speed.
+# A tray app is idle almost all of the time, so binary size matters more than
+# throughput. Compare against `release` before adopting it — see P1-22.
+[profile.dist]
+inherits = "release"
+opt-level = "z"
