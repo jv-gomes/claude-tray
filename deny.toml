@@ -1,0 +1,92 @@
+# Supply-chain policy, enforced by cargo-deny in CI and available locally via
+# `just deny`. See https://embarkstudios.github.io/cargo-deny/
+
+[graph]
+# Check every platform we ship, not just the host. A dependency can be sound on
+# Linux and pull in something unacceptable on Windows.
+targets = [
+    "x86_64-unknown-linux-gnu",
+    "aarch64-unknown-linux-gnu",
+    "x86_64-apple-darwin",
+    "aarch64-apple-darwin",
+    "x86_64-pc-windows-msvc",
+]
+all-features = true
+
+[output]
+feature-depth = 1
+
+# ---------------------------------------------------------------------------
+# Security advisories
+# ---------------------------------------------------------------------------
+[advisories]
+version = 2
+# Any advisory fails the build. Unmaintained or yanked crates are surfaced too,
+# because a tray app handling credentials should not depend on abandoned code.
+yanked = "deny"
+ignore = []
+
+# ---------------------------------------------------------------------------
+# Licences
+#
+# The project is MIT OR Apache-2.0, so dependencies must be compatible with
+# permissive redistribution.
+#
+# Strong copyleft (GPL, AGPL, LGPL) is deliberately absent — adding one would
+# change the terms under which binaries can be shipped, so it must be a conscious
+# decision rather than a silent transitive arrival.
+#
+# MPL-2.0 is allowed as the single exception. It is file-level copyleft: it
+# imposes no obligation on a project that merely links the crate, only on
+# modifications to that crate's own files. It shows up unavoidably in common
+# transitive dependencies, `option-ext` under `directories` being the one this
+# project will almost certainly hit.
+# ---------------------------------------------------------------------------
+[licenses]
+version = 2
+allow = [
+    "MIT",
+    "Apache-2.0",
+    "Apache-2.0 WITH LLVM-exception",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "ISC",
+    "Unicode-3.0",
+    "Zlib",
+    "CC0-1.0",
+    "MPL-2.0",
+]
+confidence-threshold = 0.93
+exceptions = []
+
+# ---------------------------------------------------------------------------
+# Banned crates and duplicate versions
+# ---------------------------------------------------------------------------
+[bans]
+# Duplicates bloat the binary and slow builds. A warning rather than an error,
+# because transitive duplicates are often outside our control — but each one
+# should be understood, not ignored.
+multiple-versions = "warn"
+wildcards = "deny"
+highlight = "all"
+allow-wildcard-paths = true
+
+deny = [
+    # Prefer rustls throughout. OpenSSL complicates cross-compilation and
+    # packaging, and adds a large C attack surface to a credential-handling app.
+    { crate = "openssl", reason = "use rustls instead; see CONTRIBUTING.md dependency policy" },
+    { crate = "openssl-sys", reason = "use rustls instead; see CONTRIBUTING.md dependency policy" },
+    { crate = "native-tls", reason = "use rustls instead; see CONTRIBUTING.md dependency policy" },
+]
+
+skip = []
+skip-tree = []
+
+# ---------------------------------------------------------------------------
+# Sources
+# ---------------------------------------------------------------------------
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]
+allow-git = []
