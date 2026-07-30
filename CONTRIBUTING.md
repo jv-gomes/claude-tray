@@ -43,14 +43,37 @@ You need a **stable Rust toolchain**. Install via [rustup](https://rustup.rs):
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 ```
 
-The repository pins its toolchain in `rust-toolchain.toml`, so rustup will select the
-right version automatically. Then:
+The repository pins its toolchain in `rust-toolchain.toml`, so rustup selects the right
+version and installs `rustfmt` and `clippy` automatically on first build. **Use rustup
+rather than a distribution package** — `apt install rustc cargo` and equivalents ignore
+`rust-toolchain.toml`, so you would silently build with a different toolchain than CI.
+
+You also need a **C toolchain**, because Rust shells out to a linker:
+
+```sh
+# Debian / Ubuntu
+sudo apt install build-essential pkg-config
+```
+
+Then:
 
 ```sh
 git clone https://github.com/jv-gomes/claude-tray.git
 cd claude-tray
 cargo build
 ```
+
+### Minimum supported Rust version
+
+The MSRV is declared as `rust-version` in the workspace `Cargo.toml` and verified by a
+dedicated CI job.
+
+**Policy: the MSRV tracks roughly the last three stable releases.** It may be raised in
+a minor release when a new language or standard library feature genuinely earns it, and
+the raise is called out in `CHANGELOG.md`. It is never raised silently, and never in a
+patch release.
+
+Check it locally with `just msrv`.
 
 ### Optional but recommended tooling
 
@@ -165,9 +188,15 @@ the majority of the project testable in CI on every platform.
 - `cargo clippy` must pass with `-D warnings`.
 - **`unsafe` is forbidden** workspace-wide. If you believe you need it, open an issue
   first and explain why.
-- **No `unwrap()` or `expect()` in library code.** Return a `Result`. Tests are exempt.
+- **No `unwrap()` or `expect()` in library code.** Return a `Result`. `clippy::unwrap_used`
+  is set to `deny` workspace-wide, so this is enforced rather than requested. Test code is
+  exempt via a `#![cfg_attr(test, allow(...))]` at the top of each crate root — integration
+  tests, being separate crates, need their own allow.
 - Library errors use `thiserror`; the binary may use `anyhow` at its outermost boundary.
 - Public items need rustdoc. `missing_docs` is a warning and will be caught in CI.
+- `rustfmt.toml` is stable-only by policy. Convenient options like `wrap_comments` and
+  `imports_granularity` are nightly-gated and would make CI and local runs disagree
+  silently, so they are omitted. Wrap long doc comments by hand at about 100 columns.
 - Every user-facing error message must name a next action — "Sign in", "Check your
   network" — not just describe the failure.
 
@@ -189,10 +218,23 @@ These are not style preferences. A PR violating one will not be merged.
 Every new dependency is a permanent maintenance and security commitment, so:
 
 - Justify it in the PR description. "It saves 20 lines" usually is not enough.
-- Prefer `rustls` over anything requiring OpenSSL.
+- Add the version to `[workspace.dependencies]` in the root `Cargo.toml`, and reference it
+  from member crates with `foo.workspace = true`. That table is intentionally empty until
+  a phase actually needs an entry — versions live in one place so they cannot drift.
 - Disable default features and enable only what you use.
-- Check the transitive tree with `cargo tree` before proposing it.
-- It must pass `cargo deny check` — compatible licence, no known advisories.
+- Check the transitive tree with `cargo tree --duplicates` (or `just tree`) first.
+- It must pass `just deny` — compatible licence, no known advisories, no banned crate.
+
+`deny.toml` encodes the parts of this policy that can be enforced automatically:
+
+- **Licences** are allowlisted to permissive ones compatible with MIT OR Apache-2.0.
+  Adding a copyleft dependency changes the terms under which binaries can be shipped, so
+  it is a deliberate decision, not a silent one.
+- **`openssl`, `openssl-sys`, and `native-tls` are banned outright.** Use `rustls`. OpenSSL
+  complicates cross-compilation and packaging, and adds a large C attack surface to an
+  application that handles credentials.
+- **All five release targets are checked**, not just your host. A dependency can be sound
+  on Linux and pull in something unacceptable on Windows.
 
 ---
 
