@@ -1,0 +1,56 @@
+# ---- Local planning / agent files (intentionally never committed) ----
+claude.md
+CLAUDE.md
+.claude/
+.mcp.json
+ROADMAP.md
+/roadmap/
+/notes/
+/scratch/
+
+# ---- Rust ----
+/target/
+**/target/
+**/*.rs.bk
+*.pdb
+Cargo.lock.orig
+
+# ---- Build / packaging output ----
+/dist/
+/release/
+*.AppImage
+*.deb
+*.rpm
+*.dmg
+*.msi
+*.exe.sig
+
+# ---- Env & secrets ----
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets.toml
+credentials.json
+
+# ---- Editors / IDEs ----
+.vscode/
+.idea/
+*.iml
+*.swp
+*.swo
+*~
+
+# ---- OS junk ----
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+desktop.ini
+
+# ---- Coverage / profiling ----
+/coverage/
+*.profraw
+*.profdata
+lcov.info
