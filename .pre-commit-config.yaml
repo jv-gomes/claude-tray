@@ -1,0 +1,38 @@
+# Optional. Catches the two things most likely to fail CI, before you push.
+#
+#   pip install pre-commit   (or: pipx install pre-commit)
+#   pre-commit install
+#
+# Not required to contribute — `just check-all` covers the same ground and more.
+# Skip a run with `git commit --no-verify` when you need to.
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+        exclude: ^LICENSE-
+      - id: end-of-file-fixer
+        exclude: ^LICENSE-
+      - id: check-yaml
+      - id: check-toml
+      - id: check-merge-conflict
+      - id: mixed-line-ending
+        args: [--fix=lf]
+      - id: detect-private-key
+
+  - repo: local
+    hooks:
+      - id: cargo-fmt
+        name: cargo fmt
+        entry: cargo fmt --all --
+        language: system
+        types: [rust]
+        pass_filenames: false
+
+      - id: cargo-clippy
+        name: cargo clippy
+        entry: cargo clippy --workspace --all-targets --all-features -- -D warnings
+        language: system
+        types: [rust]
+        pass_filenames: false
