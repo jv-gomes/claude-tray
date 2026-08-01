@@ -49,9 +49,28 @@ doc-open:
 # ---------------------------------------------------------------------------
 
 # Everything CI runs. Use this before pushing.
-check-all: fmt-check lint test doc
+check-all: fmt-check lint test doc core-purity
     @echo ""
     @echo "✓ all checks passed"
+
+# The domain crate must stay free of I/O, so that the bulk of the logic can be
+# tested in CI with no desktop session, no network, and no credentials. See
+# docs/adr/0006-chrono-for-time.md.
+core-purity:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    forbidden='^(libc|iana-time-zone|tokio|reqwest|hyper|ureq|rustls|keyring|directories|notify-rust|tray-icon|windows-link|windows-sys) '
+    tree="$(cargo tree -p claude-tray-core --edges normal --prefix none)"
+    if echo "$tree" | grep -Eq "$forbidden"; then
+        echo "error: claude-tray-core gained a dependency that can touch the outside world:" >&2
+        echo "$tree" | grep -E "$forbidden" >&2
+        exit 1
+    fi
+    if cargo tree -p claude-tray-core -e features | grep -q 'chrono feature "clock"'; then
+        echo 'error: claude-tray-core enabled chrono'"'"'s "clock" feature, which puts an ambient clock in the domain model.' >&2
+        exit 1
+    fi
+    echo "✓ claude-tray-core has no I/O dependencies"
 
 # Supply-chain policy: advisories, licences, bans, sources. Needs `cargo install cargo-deny`.
 deny:

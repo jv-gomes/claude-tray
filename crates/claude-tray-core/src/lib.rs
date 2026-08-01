@@ -31,9 +31,8 @@
 //! quantisation, each optionally passed through [`Hysteresis`] so a figure
 //! resting on a boundary does not flicker the icon.
 //!
-//! # Status
-//!
-//! The notification engine arrives in the rest of roadmap phase 2.
+//! Separately, [`NotificationEngine`] watches the run of snapshots and decides
+//! when a threshold has been crossed downwards or a quota window has refilled.
 
 // Tests are allowed the ergonomic panicking helpers that library code is not.
 #![cfg_attr(test, allow(clippy::unwrap_used, clippy::expect_used, clippy::panic))]
@@ -42,6 +41,7 @@ mod battery;
 mod color;
 mod duration;
 mod hysteresis;
+mod notification;
 mod percent;
 mod plan;
 mod snapshot;
@@ -52,6 +52,7 @@ pub use battery::BatteryLevel;
 pub use color::{ColorState, Thresholds, ThresholdsError};
 pub use duration::{UNKNOWN, humanize_duration};
 pub use hysteresis::Hysteresis;
+pub use notification::{NotificationEngine, NotificationEvent, NotificationRule};
 pub use percent::{Percent, PercentError};
 pub use plan::Plan;
 pub use snapshot::{Source, UsageSnapshot};
