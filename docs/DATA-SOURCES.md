@@ -90,11 +90,10 @@ usage — that is what a format change looks like from here, and silently report
 ### Cost
 
 Reading is the expensive part: transcripts accumulate indefinitely, and 120 MB
-after roughly a week of daily use is realistic. Two mitigations are in place — a
-modification-time filter that skips files too old to hold a record inside any
-window, and a substring pre-filter so that only lines containing `"usage"` are
-handed to the JSON parser. See `PERFORMANCE.md` for the measured cost and for the
-incremental-read work this still needs.
+after roughly a week of daily use is realistic. Because transcripts are
+append-only, a refresh parses only the bytes added since the last one, which
+takes a steady-state refresh from ~262 ms to ~0.5 ms. See `PERFORMANCE.md` for
+the measurements, and for the correctness details that make that safe.
 
 ---
 

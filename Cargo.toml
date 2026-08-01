@@ -72,6 +72,7 @@ claude-tray-provider = { path = "crates/claude-tray-provider", version = "0.0.0"
 
 # Dev-only.
 proptest = "1"
+tempfile = "3"
 
 # ---------------------------------------------------------------------------
 # Lints, applied workspace-wide via `[lints] workspace = true` in each crate.

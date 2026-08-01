@@ -59,34 +59,51 @@ Those rows get filled in once phase 6 produces a process that stays resident.
 
 ### 2026-08-01 — Phase 3, local-file provider
 
-One fetch from the `local-file` provider, reading real Claude Code transcripts.
+Fetches from the `local-file` provider, against this machine's real Claude Code
+directory: 19 transcripts, 120.3 MB, 5,828 usage records inside the 30-day window.
 
-| Metric | Measured |
-| ------ | -------- |
-| Binary size (release) | 915,480 B (894 KB) |
-| One fetch, 120.1 MB across 19 transcripts | ~206 ms |
+| Metric | Measured | Budget |
+| ------ | -------- | ------ |
+| Binary size (release) | 915,480 B (894 KB) | < 10 MB |
+| First fetch (cold cache) | ~262 ms | — |
+| Steady-state refresh | ~0.5 ms | — |
+| Implied idle CPU at a 30 s interval | ~0.002% | < 0.1% |
+| Records retained in memory | 5,828 (~140 KB) | — |
 
-Environment: Debian 13 (trixie), x86_64, warm page cache.
+Environment: Debian 13 (trixie), x86_64, warm page cache, release profile.
 
-**This exceeds the idle-CPU budget and must be fixed before the scheduler wires
-it up in phase 8.** At the default 30-second interval, 206 ms of work per refresh
-averages roughly 0.7% CPU — seven times the 0.1% budget — and the cost grows with
-every session recorded, without bound.
+Reproduce with:
 
-Two mitigations are already in place and are not enough on their own:
+```sh
+cargo run --release --example scan-timing -p claude-tray-provider
+```
 
-- **Modification-time filter.** Files not written to within the longest window
-  are skipped unopened. On the machine measured it saved nothing, because all 19
-  transcripts were younger than the 30-day monthly window. It only pays off on a
-  machine with genuinely old history.
-- **Substring pre-filter.** Only lines containing `"usage"` reach the JSON
-  parser, which is what keeps a 120 MB scan down to 206 ms rather than seconds.
+**Why the steady state is nearly free.** Transcripts are append-only, so what a
+refresh has already parsed cannot change. The provider remembers how many bytes
+of each file it has consumed and reads only what has been added since — for an
+idle machine, nothing. What remains per refresh is one `stat` per transcript plus
+a sum over the retained records. Three details make that safe:
 
-The fix is **incremental reading**: transcripts are append-only, so a refresh
-should remember each file's length and parse only the bytes appended since the
-last pass, retaining per-record timestamps so that rolling windows can still drop
-records as they age out. That turns a steady-state refresh into near-zero work
-regardless of how much history has accumulated.
+- Reading stops at the **last complete line**. The session being written right
+  now always ends mid-record, and consuming that partial line would lose the
+  record and leave the offset inside the next one.
+- A file **shorter** than what was consumed from it was replaced rather than
+  appended to, so its state is discarded and it is re-read.
+- Records that have aged out of every window are **dropped**, so the cache is
+  bounded by the longest window rather than by process lifetime.
+
+Two filters bound the cold cost as well:
+
+- **Modification-time filter**, applied only to files never read before: one last
+  touched before the longest window began cannot hold a record inside it. It
+  saved nothing on the machine measured — all 19 transcripts were younger than 30
+  days — and pays off on a machine with genuinely old history.
+- **Substring pre-filter**: only lines containing `"usage"` reach the JSON
+  parser, which is what keeps the 120 MB first pass at 262 ms rather than seconds.
+
+The first fetch is still proportional to history inside the longest window. It
+happens once, off the UI thread, and phase 8 should not block the first icon
+paint on it.
 
 ## Profile comparison (P1-22)
 

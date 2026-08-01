@@ -166,6 +166,7 @@ dependencies = [
  "claude-tray-core",
  "directories",
  "serde_json",
+ "tempfile",
  "thiserror",
  "tokio",
 ]
