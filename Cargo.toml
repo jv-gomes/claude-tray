@@ -28,6 +28,17 @@ categories = ["command-line-utilities", "gui"]
 # member crates reference it with `foo.workspace = true`.
 # ---------------------------------------------------------------------------
 [workspace.dependencies]
+# Time. The `clock` feature is deliberately absent: without it `Utc::now()` and
+# `Local` do not exist, so core logic is forced to take the current instant as a
+# parameter. That is what keeps `claude-tray-core` free of ambient I/O and makes
+# time-dependent behaviour testable with fixed instants. The binary crate opts
+# into `clock` separately for local-time display. See docs/adr/0006.
+chrono = { version = "0.4", default-features = false, features = ["serde", "std"] }
+serde = { version = "1", default-features = false, features = ["derive", "std"] }
+thiserror = { version = "2", default-features = false, features = ["std"] }
+
+# Dev-only.
+proptest = "1"
 
 # ---------------------------------------------------------------------------
 # Lints, applied workspace-wide via `[lints] workspace = true` in each crate.
@@ -51,6 +62,11 @@ pedantic = { level = "warn", priority = -1 }
 unwrap_used = "deny"
 expect_used = "warn"
 panic = "deny"
+
+# Every type is re-exported at the crate root, so module names never appear in the
+# public API and this lint would only force awkward names — `Kind` instead of
+# `WindowKind` — for no reader benefit.
+module_name_repetitions = "allow"
 
 # Correctness and clarity beyond pedantic.
 todo = "warn"
