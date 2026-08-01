@@ -139,10 +139,10 @@ mod tests {
     fn snapshot() -> UsageSnapshot {
         UsageSnapshot::new(
             instant("2026-08-01T10:42:30Z"),
-            Plan::Pro,
             Vec::new(),
             Source::new("mock"),
         )
+        .with_plan(Plan::Pro)
     }
 
     #[test]

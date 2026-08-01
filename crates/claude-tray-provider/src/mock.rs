@@ -238,7 +238,6 @@ impl MockProvider {
 
         let snapshot = UsageSnapshot::new(
             captured_at,
-            self.plan.clone(),
             vec![UsageWindow::new(
                 WindowKind::Session,
                 used,
@@ -246,7 +245,8 @@ impl MockProvider {
                 resets_at,
             )],
             Source::new(self.id.clone()),
-        );
+        )
+        .with_plan(self.plan.clone());
 
         match &self.model {
             Some(model) => snapshot.with_model(model.clone()),
@@ -568,7 +568,7 @@ mod tests {
 
         let snapshot = provider.fetch().await.unwrap();
 
-        assert_eq!(snapshot.plan, Plan::Max);
+        assert_eq!(snapshot.plan, Some(Plan::Max));
         assert_eq!(snapshot.model.as_deref(), Some("claude-sonnet-5"));
     }
 

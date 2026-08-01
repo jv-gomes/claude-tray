@@ -26,7 +26,7 @@ use std::process::ExitCode;
 use chrono::Local;
 use clap::Parser;
 use claude_tray_core::{BatteryLevel, ColorState, Thresholds, UsageSnapshot, humanize_duration};
-use claude_tray_provider::{ProviderRegistry, UsageProvider};
+use claude_tray_provider::{LocalFileProvider, ProviderRegistry, UsageProvider};
 
 #[derive(Debug, Parser)]
 #[command(
@@ -117,16 +117,17 @@ async fn run(cli: &Cli) -> Result<(), String> {
 /// This is the composition root's whole job for now: phase 10 will read the ids
 /// and their settings from a config file rather than from flags, but what it
 /// hands to the registry will be the same.
-// Without the `mock` feature there is nothing to register: the argument goes
-// unread and no registration can fail. The flag still parses, and an empty
-// registry explains itself.
-#[cfg_attr(
-    not(feature = "mock"),
-    allow(unused_variables, clippy::unnecessary_wraps)
-)]
+// Without the `mock` feature there is nothing here that takes a simulated
+// figure, so the argument goes unread. The flag still parses and is ignored.
+#[cfg_attr(not(feature = "mock"), allow(unused_variables))]
 fn build_registry(simulate_percent: Option<f64>) -> Result<ProviderRegistry, String> {
-    #[allow(unused_mut)]
     let mut registry = ProviderRegistry::new();
+
+    registry
+        .register(std::sync::Arc::new(
+            LocalFileProvider::discover().map_err(|error| error.to_string())?,
+        ))
+        .map_err(|error| error.to_string())?;
 
     #[cfg(feature = "mock")]
     registry
@@ -170,13 +171,31 @@ fn print_snapshot(snapshot: &UsageSnapshot) {
         None => format!("—  ({color})"),
     };
 
-    println!("Claude {}", snapshot.plan);
+    match &snapshot.plan {
+        Some(plan) => println!("Claude {plan}"),
+        // A source can measure usage without knowing the subscription it was
+        // measured against. Saying so beats naming a plan we did not read.
+        None => println!("Claude"),
+    }
     println!();
     print_row("Remaining", &gauge);
     print_row(
         "Resets in",
         &humanize_duration(snapshot.time_until_reset(snapshot.captured_at)),
     );
+    // A source with no limits has nothing to put in the gauge above, so the
+    // per-window counts are the only thing it has to say.
+    for window in &snapshot.windows {
+        let used = thousands(window.used);
+        print_row(
+            &window.kind.to_string(),
+            &match window.limit {
+                Some(limit) => format!("{used} of {}", thousands(limit)),
+                None => format!("{used} used"),
+            },
+        );
+    }
+
     print_row("Model", snapshot.model.as_deref().unwrap_or("—"));
     print_row("Source", snapshot.source.as_str());
     print_row(
@@ -194,4 +213,20 @@ fn print_snapshot(snapshot: &UsageSnapshot) {
 /// Prints one aligned label/value row.
 fn print_row(label: &str, value: &str) {
     println!("{label:<14}{value}");
+}
+
+/// Groups a number into thousands, because token counts run to seven digits and
+/// are unreadable without it.
+fn thousands(value: u64) -> String {
+    let digits = value.to_string();
+    let mut grouped = String::with_capacity(digits.len() + digits.len() / 3);
+
+    for (index, digit) in digits.chars().enumerate() {
+        if index > 0 && (digits.len() - index).is_multiple_of(3) {
+            grouped.push(',');
+        }
+        grouped.push(digit);
+    }
+
+    grouped
 }

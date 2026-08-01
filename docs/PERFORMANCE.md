@@ -57,6 +57,37 @@ Environment: Debian 13 (trixie), x86_64, rustc 1.97.1, `lto = "thin"`,
 **Idle memory and CPU are not yet measurable** — the binary prints a line and exits.
 Those rows get filled in once phase 6 produces a process that stays resident.
 
+### 2026-08-01 — Phase 3, local-file provider
+
+One fetch from the `local-file` provider, reading real Claude Code transcripts.
+
+| Metric | Measured |
+| ------ | -------- |
+| Binary size (release) | 915,480 B (894 KB) |
+| One fetch, 120.1 MB across 19 transcripts | ~206 ms |
+
+Environment: Debian 13 (trixie), x86_64, warm page cache.
+
+**This exceeds the idle-CPU budget and must be fixed before the scheduler wires
+it up in phase 8.** At the default 30-second interval, 206 ms of work per refresh
+averages roughly 0.7% CPU — seven times the 0.1% budget — and the cost grows with
+every session recorded, without bound.
+
+Two mitigations are already in place and are not enough on their own:
+
+- **Modification-time filter.** Files not written to within the longest window
+  are skipped unopened. On the machine measured it saved nothing, because all 19
+  transcripts were younger than the 30-day monthly window. It only pays off on a
+  machine with genuinely old history.
+- **Substring pre-filter.** Only lines containing `"usage"` reach the JSON
+  parser, which is what keeps a 120 MB scan down to 206 ms rather than seconds.
+
+The fix is **incremental reading**: transcripts are append-only, so a refresh
+should remember each file's length and parse only the bytes appended since the
+last pass, retaining per-record timestamps so that rolling windows can still drop
+records as they age out. That turns a steady-state refresh into near-zero work
+regardless of how much history has accumulated.
+
 ## Profile comparison (P1-22)
 
 The `dist` profile saves **15,864 bytes, about 4.7%**, over `release` on the skeleton.

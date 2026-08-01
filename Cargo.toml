@@ -58,13 +58,20 @@ clap = { version = "4", default-features = false, features = [
 # be paying for workers that have nothing to do. Revisit in phase 6.
 tokio = { version = "1", default-features = false, features = ["rt", "macros"] }
 
+# Locating the user's home directory per-platform. Used only for that: Claude
+# Code keeps its state in `~/.claude` on every OS rather than in the XDG or
+# Known Folders locations, so the rest of the crate's API does not apply.
+directories = "6"
+
+# Reading Claude Code's local transcripts, which are JSON Lines.
+serde_json = "1"
+
 # Internal crates.
 claude-tray-core = { path = "crates/claude-tray-core", version = "0.0.0" }
 claude-tray-provider = { path = "crates/claude-tray-provider", version = "0.0.0" }
 
 # Dev-only.
 proptest = "1"
-serde_json = "1"
 
 # ---------------------------------------------------------------------------
 # Lints, applied workspace-wide via `[lints] workspace = true` in each crate.

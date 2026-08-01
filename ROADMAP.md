@@ -192,8 +192,8 @@ Pure, dependency-light, 100% unit-testable. Build this *before* touching any GUI
 The single riskiest area. Design for the data source changing under you.
 
 ### Research spikes — do these first, write findings down
-- [ ] **P3-01** 🧪 Inventory `~/.claude/`: what files exist, what they contain, which are stable across versions.
-- [ ] **P3-02** 🧪 Determine whether local Claude Code session files expose a usable quota/limit signal, or only token counts.
+- [x] **P3-01** 🧪 Inventory `~/.claude/`: what files exist, what they contain, which are stable across versions.
+- [x] **P3-02** 🧪 Determine whether local Claude Code session files expose a usable quota/limit signal, or only token counts.
 - [ ] **P3-03** 🧪 Investigate the documented Anthropic Admin usage/cost report endpoints — what they cover, what auth they need, whether they apply to subscription plans at all.
 - [ ] **P3-04** 🧪 Determine what the `/usage` view in Claude Code reads from, and whether that path is reusable.
 - [ ] **P3-05** 🧪 ⚠️ Evaluate claude.ai internal endpoints: stability, ToS position, rate limits, bot protection. **Assume this is unsupported and may break or be disallowed.**
@@ -218,14 +218,14 @@ The single riskiest area. Design for the data source changing under you.
 - [x] **P3-20** Add a `--simulate-percent=<n>` dev flag for screenshotting every icon state.
 
 ### Local-file provider
-- [ ] **P3-21** Resolve the Claude config directory per-platform via `directories`, honouring `CLAUDE_CONFIG_DIR`.
-- [ ] **P3-22** Implement read-only, non-locking parsing of the relevant local files.
-- [ ] **P3-23** Treat every field as optional; never panic on an unexpected shape. 🔴
-- [ ] **P3-24** Version-tag the parser and log loudly when the shape is unrecognised.
-- [ ] **P3-25** Aggregate token counts into a `UsageWindow` where limits are known.
-- [ ] **P3-26** Handle "file absent" as `NotAuthenticated`, not as an error.
-- [ ] **P3-27** Add fixture files under `tests/fixtures/` and snapshot-test the parser.
-- [ ] **P3-28** Scrub all fixtures of real tokens, account ids, and project paths. ⚠️ 🔴
+- [x] **P3-21** Resolve the Claude config directory per-platform via `directories`, honouring `CLAUDE_CONFIG_DIR`.
+- [x] **P3-22** Implement read-only, non-locking parsing of the relevant local files.
+- [x] **P3-23** Treat every field as optional; never panic on an unexpected shape. 🔴
+- [x] **P3-24** Version-tag the parser and log loudly when the shape is unrecognised.
+- [x] **P3-25** Aggregate token counts into a `UsageWindow` where limits are known.
+- [x] **P3-26** Handle "file absent" as `NotAuthenticated`, not as an error.
+- [x] **P3-27** Add fixture files under `tests/fixtures/` and snapshot-test the parser.
+- [x] **P3-28** Scrub all fixtures of real tokens, account ids, and project paths. ⚠️ 🔴
 
 ### HTTP provider scaffolding
 - [ ] **P3-29** Add `reqwest` with `rustls-tls`, default features off. 🔴

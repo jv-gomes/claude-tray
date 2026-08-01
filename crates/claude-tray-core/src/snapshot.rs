@@ -48,32 +48,44 @@ impl fmt::Display for Source {
 pub struct UsageSnapshot {
     /// When this reading was taken, in UTC. Never the time it was displayed.
     pub captured_at: DateTime<Utc>,
-    /// The subscription the reading belongs to.
-    pub plan: Plan,
+    /// The subscription the reading belongs to, if the provider knows it.
+    ///
+    /// Optional because knowing what was consumed and knowing which plan it was
+    /// consumed against are separate facts, and a source can have one without
+    /// the other — local usage records say nothing about the subscription.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub plan: Option<Plan>,
     /// The quota windows the provider reported, in no particular order.
     pub windows: Vec<UsageWindow>,
     /// The model in use, if the provider reports one.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub model: Option<String>,
     /// Which provider produced this reading.
     pub source: Source,
 }
 
 impl UsageSnapshot {
-    /// Creates a snapshot.
+    /// Creates a snapshot of what a provider measured.
+    ///
+    /// The plan and the model are attached separately, because they describe
+    /// the account rather than the measurement and not every source reports
+    /// them.
     #[must_use]
-    pub fn new(
-        captured_at: DateTime<Utc>,
-        plan: Plan,
-        windows: Vec<UsageWindow>,
-        source: Source,
-    ) -> Self {
+    pub fn new(captured_at: DateTime<Utc>, windows: Vec<UsageWindow>, source: Source) -> Self {
         Self {
             captured_at,
-            plan,
+            plan: None,
             windows,
             model: None,
             source,
         }
+    }
+
+    /// Attaches the subscription the reading belongs to.
+    #[must_use]
+    pub fn with_plan(mut self, plan: Plan) -> Self {
+        self.plan = Some(plan);
+        self
     }
 
     /// Attaches the model name the reading applies to.
@@ -160,7 +172,6 @@ mod tests {
     fn snapshot() -> UsageSnapshot {
         UsageSnapshot::new(
             instant("2026-08-01T10:42:30Z"),
-            Plan::Pro,
             vec![
                 UsageWindow::new(
                     WindowKind::Session,
@@ -172,6 +183,7 @@ mod tests {
             ],
             Source::new("mock"),
         )
+        .with_plan(Plan::Pro)
         .with_model("claude-opus-5")
     }
 
@@ -198,10 +210,10 @@ mod tests {
     fn a_snapshot_with_no_windows_has_nothing_measurable() {
         let snapshot = UsageSnapshot::new(
             instant("2026-08-01T10:42:30Z"),
-            Plan::Free,
             Vec::new(),
             Source::new("mock"),
-        );
+        )
+        .with_plan(Plan::Free);
         assert_eq!(snapshot.measurable_windows().count(), 0);
         assert_eq!(snapshot.model, None);
     }
@@ -212,7 +224,6 @@ mod tests {
     fn the_most_constrained_window_wins() {
         let snapshot = UsageSnapshot::new(
             instant("2026-08-01T10:42:30Z"),
-            Plan::Max,
             vec![
                 UsageWindow::new(
                     WindowKind::Session,
@@ -223,7 +234,8 @@ mod tests {
                 UsageWindow::new(WindowKind::Weekly, 95, 100, instant("2026-08-03T00:00:00Z")),
             ],
             Source::new("mock"),
-        );
+        )
+        .with_plan(Plan::Max);
 
         assert_eq!(
             snapshot.most_constrained_window().map(|w| w.kind),
@@ -238,7 +250,6 @@ mod tests {
     fn the_countdown_follows_the_same_window_as_the_percentage() {
         let snapshot = UsageSnapshot::new(
             instant("2026-08-01T10:42:30Z"),
-            Plan::Max,
             vec![
                 UsageWindow::new(
                     WindowKind::Session,
@@ -249,7 +260,8 @@ mod tests {
                 UsageWindow::new(WindowKind::Weekly, 95, 100, instant("2026-08-01T12:00:00Z")),
             ],
             Source::new("mock"),
-        );
+        )
+        .with_plan(Plan::Max);
 
         assert_eq!(
             snapshot.time_until_reset(instant("2026-08-01T10:42:30Z")),
@@ -262,10 +274,10 @@ mod tests {
     fn a_snapshot_with_no_measurable_window_has_no_percentage() {
         let snapshot = UsageSnapshot::new(
             instant("2026-08-01T10:42:30Z"),
-            Plan::Free,
             vec![UsageWindow::unbounded(WindowKind::Session, 3)],
             Source::new("mock"),
-        );
+        )
+        .with_plan(Plan::Free);
         assert_eq!(snapshot.most_constrained_window(), None);
         assert_eq!(snapshot.remaining_percent(), None);
         assert_eq!(

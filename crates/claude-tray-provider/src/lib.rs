@@ -38,6 +38,7 @@
 
 mod error;
 mod fallback;
+mod local;
 #[cfg(feature = "mock")]
 mod mock;
 mod provider;
@@ -45,6 +46,7 @@ mod registry;
 
 pub use error::ProviderError;
 pub use fallback::FallbackChain;
+pub use local::{CONFIG_DIR_ENV, LocalFileProvider, ScanReport};
 #[cfg(feature = "mock")]
 pub use mock::{Fault, MockProvider, Step};
 pub use provider::{Health, ProviderCapabilities, UsageProvider};

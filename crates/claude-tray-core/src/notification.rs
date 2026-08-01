@@ -88,7 +88,6 @@ pub enum NotificationEvent {
 /// # fn at(text: &str, used: u64) -> UsageSnapshot {
 /// #     UsageSnapshot::new(
 /// #         text.parse::<DateTime<Utc>>().unwrap(),
-/// #         Plan::Pro,
 /// #         vec![UsageWindow::new(
 /// #             WindowKind::Session,
 /// #             used,
@@ -97,6 +96,7 @@ pub enum NotificationEvent {
 /// #         )],
 /// #         Source::new("mock"),
 /// #     )
+/// #     .with_plan(Plan::Pro)
 /// # }
 /// let mut engine = NotificationEngine::default();
 ///
@@ -342,7 +342,6 @@ mod tests {
     fn reading(captured_at: &str, remaining: u64, resets_at: &str) -> UsageSnapshot {
         UsageSnapshot::new(
             instant(captured_at),
-            Plan::Pro,
             vec![UsageWindow::new(
                 WindowKind::Session,
                 100 - remaining,
@@ -351,6 +350,7 @@ mod tests {
             )],
             Source::new("mock"),
         )
+        .with_plan(Plan::Pro)
     }
 
     const RESET: &str = "2026-08-01T18:00:00Z";
@@ -479,13 +479,13 @@ mod tests {
         let snapshot = |session: &str, weekly: &str| {
             UsageSnapshot::new(
                 instant("2026-08-01T18:00:30Z"),
-                Plan::Max,
                 vec![
                     UsageWindow::new(WindowKind::Session, 10, 100, instant(session)),
                     UsageWindow::new(WindowKind::Weekly, 90, 100, instant(weekly)),
                 ],
                 Source::new("mock"),
             )
+            .with_plan(Plan::Max)
         };
 
         engine.observe(&snapshot("2026-08-01T18:00:00Z", "2026-08-03T00:00:00Z"));
@@ -594,10 +594,10 @@ mod tests {
         let mut engine = NotificationEngine::default();
         let unmeasurable = UsageSnapshot::new(
             instant("2026-08-01T10:00:30Z"),
-            Plan::Free,
             vec![UsageWindow::unbounded(WindowKind::Session, 40)],
             Source::new("mock"),
-        );
+        )
+        .with_plan(Plan::Free);
 
         engine.observe(&reading("2026-08-01T10:00:00Z", 60, RESET));
         assert!(engine.observe(&unmeasurable).is_empty());
