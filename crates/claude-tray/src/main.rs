@@ -26,7 +26,7 @@ use std::process::ExitCode;
 use chrono::Local;
 use clap::Parser;
 use claude_tray_core::{BatteryLevel, ColorState, Thresholds, UsageSnapshot, humanize_duration};
-use claude_tray_provider::UsageProvider;
+use claude_tray_provider::{ProviderRegistry, UsageProvider};
 
 #[derive(Debug, Parser)]
 #[command(
@@ -35,12 +35,13 @@ use claude_tray_provider::UsageProvider;
     about = "Monitor your Claude usage from the system tray."
 )]
 struct Cli {
-    /// Usage data source to read from.
+    /// Usage data sources to read from, in order of preference.
     ///
-    /// Only `mock` exists so far — which real source backs the default is still
-    /// open, and waits on the research in roadmap phase 3.
-    #[arg(long, value_name = "ID")]
-    provider: Option<String>,
+    /// Comma-separated: the first one that answers is used. Only `mock` exists
+    /// so far — which real source backs the default is still open, and waits on
+    /// the research in roadmap phase 3.
+    #[arg(long, value_name = "ID[,ID...]", value_delimiter = ',')]
+    provider: Vec<String>,
 
     /// Report this percentage of usage remaining instead of reading a real one.
     ///
@@ -81,51 +82,65 @@ fn fail(message: &str) -> ExitCode {
 async fn run(cli: &Cli) -> Result<(), String> {
     // `--simulate-percent` is only meaningful against the mock, so asking for a
     // figure is taken as asking for the provider that can invent one.
-    let requested = cli
-        .provider
-        .as_deref()
-        .or_else(|| cli.simulate_percent.map(|_| "mock"));
+    let mut ids = cli.provider.clone();
+    if ids.is_empty() && cli.simulate_percent.is_some() {
+        ids.push("mock".to_owned());
+    }
 
-    let Some(id) = requested else {
+    if ids.is_empty() {
         println!("{} {}", env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION"));
         println!("The tray arrives in roadmap phase 6.");
         println!("Meanwhile, try: claude-tray --provider mock --simulate-percent 42");
         return Ok(());
-    };
+    }
 
-    let provider = build_provider(id, cli.simulate_percent)?;
-    let snapshot = provider
-        .fetch()
-        .await
-        .map_err(|error| format!("{id}: {error}"))?;
+    let registry = build_registry(cli.simulate_percent)?;
+    if registry.is_empty() {
+        return Err(
+            "this build has no providers compiled in: the `mock` feature is off and no real \
+             provider exists yet"
+                .to_owned(),
+        );
+    }
+
+    // Even one id goes through a chain, so that the single- and multi-source
+    // paths are the same code.
+    let chain = registry.chain(&ids).map_err(|error| error.to_string())?;
+    let snapshot = chain.fetch().await.map_err(|error| error.to_string())?;
 
     print_snapshot(&snapshot);
     Ok(())
 }
 
-/// Resolves a provider id to a provider.
-// Without the `mock` feature there is no provider left that takes a simulated
-// figure, so the argument goes unread rather than unsupported — the flag still
-// parses, and the arm below explains why it did nothing.
-#[cfg_attr(not(feature = "mock"), allow(unused_variables))]
-fn build_provider(
-    id: &str,
-    simulate_percent: Option<f64>,
-) -> Result<Box<dyn UsageProvider>, String> {
-    match id {
-        #[cfg(feature = "mock")]
-        "mock" => mock_provider(simulate_percent),
-        #[cfg(not(feature = "mock"))]
-        "mock" => Err("this build was compiled without the `mock` feature".to_owned()),
-        other => Err(format!(
-            "unknown provider `{other}` (available: mock; real providers arrive in roadmap phase 3)"
-        )),
-    }
+/// Builds the registry of providers this build knows how to construct.
+///
+/// This is the composition root's whole job for now: phase 10 will read the ids
+/// and their settings from a config file rather than from flags, but what it
+/// hands to the registry will be the same.
+// Without the `mock` feature there is nothing to register: the argument goes
+// unread and no registration can fail. The flag still parses, and an empty
+// registry explains itself.
+#[cfg_attr(
+    not(feature = "mock"),
+    allow(unused_variables, clippy::unnecessary_wraps)
+)]
+fn build_registry(simulate_percent: Option<f64>) -> Result<ProviderRegistry, String> {
+    #[allow(unused_mut)]
+    let mut registry = ProviderRegistry::new();
+
+    #[cfg(feature = "mock")]
+    registry
+        .register(std::sync::Arc::new(mock_provider(simulate_percent)?))
+        .map_err(|error| error.to_string())?;
+
+    Ok(registry)
 }
 
 /// Builds the mock, reporting either the requested figure or the demo one.
 #[cfg(feature = "mock")]
-fn mock_provider(simulate_percent: Option<f64>) -> Result<Box<dyn UsageProvider>, String> {
+fn mock_provider(
+    simulate_percent: Option<f64>,
+) -> Result<claude_tray_provider::MockProvider, String> {
     use claude_tray_core::Percent;
 
     /// The figure reported when none is asked for: the one from the README's
@@ -139,9 +154,7 @@ fn mock_provider(simulate_percent: Option<f64>) -> Result<Box<dyn UsageProvider>
         None => Percent::new(DEMO_PERCENT).unwrap_or(Percent::FULL),
     };
 
-    Ok(Box::new(claude_tray_provider::MockProvider::fixed(
-        remaining,
-    )))
+    Ok(claude_tray_provider::MockProvider::fixed(remaining))
 }
 
 /// Prints what the tooltip will say once there is a tray to hang it on.

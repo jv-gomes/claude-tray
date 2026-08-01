@@ -22,6 +22,13 @@
 //!   cargo feature, disabled in configuration, and requiring an explicit informed
 //!   opt-in before it will run.
 //!
+//! # Composition
+//!
+//! [`ProviderRegistry`] turns the provider ids in configuration into providers,
+//! and [`FallbackChain`] tries several in order until one answers. A chain is
+//! itself a [`UsageProvider`], so the rest of the application holds exactly one
+//! regardless of how many sources are configured.
+//!
 //! # Status
 //!
 //! [`UsageProvider`] and [`MockProvider`] exist. Which real source backs v1.0 is
@@ -30,11 +37,15 @@
 #![cfg_attr(test, allow(clippy::unwrap_used, clippy::expect_used, clippy::panic))]
 
 mod error;
+mod fallback;
 #[cfg(feature = "mock")]
 mod mock;
 mod provider;
+mod registry;
 
 pub use error::ProviderError;
+pub use fallback::FallbackChain;
 #[cfg(feature = "mock")]
 pub use mock::{Fault, MockProvider, Step};
 pub use provider::{Health, ProviderCapabilities, UsageProvider};
+pub use registry::{ProviderRegistry, RegistryError};
