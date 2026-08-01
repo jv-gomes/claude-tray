@@ -37,6 +37,31 @@ chrono = { version = "0.4", default-features = false, features = ["serde", "std"
 serde = { version = "1", default-features = false, features = ["derive", "std"] }
 thiserror = { version = "2", default-features = false, features = ["std"] }
 
+# Async traits. `UsageProvider` has to be object-safe — the registry and the
+# fallback chain hold `dyn UsageProvider` — and native `async fn` in traits is
+# not. This is the boxing that would otherwise be written by hand at every call.
+async-trait = "0.1"
+
+# Argument parsing for the binary. Default features off: the colour, suggestion,
+# and wrap-help machinery pulls in a tree several times the size of what a tray
+# app's handful of flags needs.
+clap = { version = "4", default-features = false, features = [
+    "std",
+    "derive",
+    "help",
+    "usage",
+    "error-context",
+] }
+
+# Async runtime for the binary. Only the current-thread runtime and the macros;
+# the tray event loop owns the main thread, so a multi-threaded scheduler would
+# be paying for workers that have nothing to do. Revisit in phase 6.
+tokio = { version = "1", default-features = false, features = ["rt", "macros"] }
+
+# Internal crates.
+claude-tray-core = { path = "crates/claude-tray-core", version = "0.0.0" }
+claude-tray-provider = { path = "crates/claude-tray-provider", version = "0.0.0" }
+
 # Dev-only.
 proptest = "1"
 serde_json = "1"

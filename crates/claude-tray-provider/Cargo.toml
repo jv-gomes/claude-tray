@@ -12,7 +12,17 @@ keywords.workspace = true
 categories.workspace = true
 
 [dependencies]
-claude-tray-core = { path = "../claude-tray-core", version = "0.0.0" }
+claude-tray-core.workspace = true
+async-trait.workspace = true
+thiserror.workspace = true
+
+# Providers are the I/O boundary, so this is where reading the clock belongs —
+# hence `clock`, which `claude-tray-core` deliberately does without. See
+# docs/adr/0006-chrono-for-time.md.
+chrono = { workspace = true, features = ["clock"] }
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["macros"] }
 
 [features]
 default = ["mock"]

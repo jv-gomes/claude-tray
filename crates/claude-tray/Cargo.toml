@@ -25,9 +25,23 @@ name = "claude-tray"
 path = "src/main.rs"
 
 [dependencies]
-claude-tray-core = { path = "../claude-tray-core", version = "0.0.0" }
+claude-tray-core.workspace = true
 claude-tray-icon = { path = "../claude-tray-icon", version = "0.0.0" }
-claude-tray-provider = { path = "../claude-tray-provider", version = "0.0.0" }
+claude-tray-provider.workspace = true
+clap.workspace = true
+tokio.workspace = true
+
+# The display boundary, and the only place local time is correct to use. See
+# docs/adr/0006-chrono-for-time.md.
+chrono = { workspace = true, features = ["clock"] }
+
+[features]
+default = ["mock"]
+
+# Passes through to the provider crate's synthetic source, which `--provider
+# mock` needs. Default until there is a real provider to run without it;
+# packaging (phase 15) decides whether release builds keep it.
+mock = ["claude-tray-provider/mock"]
 
 [lints]
 workspace = true

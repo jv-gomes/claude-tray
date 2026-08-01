@@ -24,6 +24,17 @@
 //!
 //! # Status
 //!
-//! Skeleton only. The provider trait and the mock arrive in roadmap phase 3.
+//! [`UsageProvider`] and [`MockProvider`] exist. Which real source backs v1.0 is
+//! still open — it waits on the research spikes in roadmap phase 3.
 
 #![cfg_attr(test, allow(clippy::unwrap_used, clippy::expect_used, clippy::panic))]
+
+mod error;
+#[cfg(feature = "mock")]
+mod mock;
+mod provider;
+
+pub use error::ProviderError;
+#[cfg(feature = "mock")]
+pub use mock::{Fault, MockProvider, Step};
+pub use provider::{Health, ProviderCapabilities, UsageProvider};
