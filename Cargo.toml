@@ -39,6 +39,7 @@ thiserror = { version = "2", default-features = false, features = ["std"] }
 
 # Dev-only.
 proptest = "1"
+serde_json = "1"
 
 # ---------------------------------------------------------------------------
 # Lints, applied workspace-wide via `[lints] workspace = true` in each crate.

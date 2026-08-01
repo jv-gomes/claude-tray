@@ -16,9 +16,29 @@
 //! Anything that needs to talk to the world belongs in `claude-tray-provider`
 //! (data sources) or the `claude-tray` binary (tray, config, logging).
 //!
+//! # The model
+//!
+//! A provider produces a [`UsageSnapshot`]: the [`Plan`] it belongs to, the
+//! [`UsageWindow`]s it reported, and the instant it was captured. The
+//! application holds exactly one [`UsageState`], which is either a snapshot
+//! (current or stale) or a reason there isn't one.
+//!
 //! # Status
 //!
-//! Skeleton only. The types described above arrive in roadmap phase 2.
+//! Types only. Percentages, colour states, and the notification engine arrive
+//! in the rest of roadmap phase 2.
 
 // Tests are allowed the ergonomic panicking helpers that library code is not.
 #![cfg_attr(test, allow(clippy::unwrap_used, clippy::expect_used, clippy::panic))]
+
+mod percent;
+mod plan;
+mod snapshot;
+mod state;
+mod window;
+
+pub use percent::{Percent, PercentError};
+pub use plan::Plan;
+pub use snapshot::{Source, UsageSnapshot};
+pub use state::{ErrorKind, UsageState};
+pub use window::{UsageWindow, WindowKind};
