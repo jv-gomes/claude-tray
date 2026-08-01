@@ -12,7 +12,14 @@ keywords.workspace = true
 categories.workspace = true
 
 [dependencies]
-claude-tray-core = { path = "../claude-tray-core", version = "0.0.0" }
+claude-tray-core.workspace = true
+thiserror.workspace = true
+tiny-skia.workspace = true
+
+[dev-dependencies]
+chrono = { workspace = true, features = ["clock"] }
+# Decoding golden images back for comparison. Already in the tree via tiny-skia.
+png.workspace = true
 
 [lints]
 workspace = true

@@ -26,7 +26,7 @@ path = "src/main.rs"
 
 [dependencies]
 claude-tray-core.workspace = true
-claude-tray-icon = { path = "../claude-tray-icon", version = "0.0.0" }
+claude-tray-icon.workspace = true
 claude-tray-provider.workspace = true
 clap.workspace = true
 tokio.workspace = true

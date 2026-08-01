@@ -66,11 +66,22 @@ directories = "6"
 # Reading Claude Code's local transcripts, which are JSON Lines.
 serde_json = "1"
 
+# 2D rasteriser for the tray icon. No SVG layer: the battery is a rounded
+# rectangle, a nub, and a clipped fill, so `resvg` would add an XML parser and
+# font shaping to draw two rectangles and no text. See docs/adr/0005.
+tiny-skia = { version = "0.12", default-features = false, features = [
+    "std",
+    "simd",
+    "png-format",
+] }
+
 # Internal crates.
 claude-tray-core = { path = "crates/claude-tray-core", version = "0.0.0" }
+claude-tray-icon = { path = "crates/claude-tray-icon", version = "0.0.0" }
 claude-tray-provider = { path = "crates/claude-tray-provider", version = "0.0.0" }
 
 # Dev-only.
+png = "0.18"
 proptest = "1"
 tempfile = "3"
 

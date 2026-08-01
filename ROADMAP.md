@@ -284,36 +284,36 @@ The single riskiest area. Design for the data source changing under you.
 # Phase 5 — Icon rendering (`claude-tray-icon`)
 
 ### Approach
-- [ ] **P5-01** 🧪 Decide: pre-baked PNGs per state, or runtime SVG rasterisation via `resvg` + `tiny-skia`. (Runtime rendering wins on flexibility and binary size; document the choice.)
-- [ ] **P5-02** Write ADR-0005 on the icon pipeline.
-- [ ] **P5-03** Define `IconSpec { level, color_state, theme, size, stale }`.
+- [x] **P5-01** 🧪 Decide: pre-baked PNGs per state, or runtime SVG rasterisation via `resvg` + `tiny-skia`. (Runtime rendering wins on flexibility and binary size; document the choice.)
+- [x] **P5-02** Write ADR-0005 on the icon pipeline.
+- [x] **P5-03** Define `IconSpec { level, color_state, theme, size, stale }`.
 
 ### Rendering
-- [ ] **P5-04** Draw the battery shell: rounded body plus the terminal nub.
-- [ ] **P5-05** Draw the fill proportional to `level`, snapped to the 10 discrete steps.
-- [ ] **P5-06** Apply the colour from `ColorState`.
-- [ ] **P5-07** Render to RGBA8 and expose the raw buffer the tray crate expects.
-- [ ] **P5-08** Support 16/22/24/32/48/64 px and pick by platform + scale factor.
-- [ ] **P5-09** Handle HiDPI: render at the device pixel ratio, never upscale a small raster. 🔴
-- [ ] **P5-10** Cache rendered icons keyed by `IconSpec`; the cache is small and bounded.
-- [ ] **P5-11** Add a distinct `Unknown` icon (dashed outline or `?`) for no-data.
-- [ ] **P5-12** Add an `Error` icon variant (a small warning badge overlay).
-- [ ] **P5-13** Add a `Loading` variant for the first fetch.
-- [ ] **P5-14** Render `Stale` as the normal icon at reduced opacity.
+- [x] **P5-04** Draw the battery shell: rounded body plus the terminal nub.
+- [x] **P5-05** Draw the fill proportional to `level`, snapped to the 10 discrete steps.
+- [x] **P5-06** Apply the colour from `ColorState`.
+- [x] **P5-07** Render to RGBA8 and expose the raw buffer the tray crate expects.
+- [x] **P5-08** Support 16/22/24/32/48/64 px and pick by platform + scale factor.
+- [x] **P5-09** Handle HiDPI: render at the device pixel ratio, never upscale a small raster. 🔴
+- [x] **P5-10** Cache rendered icons keyed by `IconSpec`; the cache is small and bounded.
+- [x] **P5-11** Add a distinct `Unknown` icon (dashed outline or `?`) for no-data.
+- [x] **P5-12** Add an `Error` icon variant (a small warning badge overlay).
+- [x] **P5-13** Add a `Loading` variant for the first fetch.
+- [x] **P5-14** Render `Stale` as the normal icon at reduced opacity.
 
 ### Themes
-- [ ] **P5-15** Implement a `Theme` enum: `Auto`, `Light`, `Dark`, `Monochrome`, `SystemAccent`.
+- [x] **P5-15** Implement a `Theme` enum: `Auto`, `Light`, `Dark`, `Monochrome`, `SystemAccent`.
 - [ ] **P5-16** Detect the system light/dark preference per platform.
 - [ ] **P5-17** Subscribe to theme-change events and re-render live where the platform allows.
-- [ ] **P5-18** Build a macOS template-image variant (monochrome + alpha) so the menu bar tints it correctly. 🔴
-- [ ] **P5-19** Ensure contrast holds on both light and dark panels; check the worst case (red on dark).
-- [ ] **P5-20** Add a colour-blind-safe palette option (don't rely on hue alone — the fill level already carries the signal).
+- [x] **P5-18** Build a macOS template-image variant (monochrome + alpha) so the menu bar tints it correctly. 🔴
+- [x] **P5-19** Ensure contrast holds on both light and dark panels; check the worst case (red on dark).
+- [x] **P5-20** Add a colour-blind-safe palette option (don't rely on hue alone — the fill level already carries the signal).
 
 ### Verification
-- [ ] **P5-21** Add a `cargo run --example icon-sheet` dev tool dumping every state to PNG.
-- [ ] **P5-22** Golden-image tests comparing rendered output against committed references.
-- [ ] **P5-23** Allow a small per-pixel tolerance so rasteriser updates don't break CI spuriously.
-- [ ] **P5-24** Benchmark a single render; assert it stays under ~2 ms.
+- [x] **P5-21** Add a `cargo run --example icon-sheet` dev tool dumping every state to PNG.
+- [x] **P5-22** Golden-image tests comparing rendered output against committed references.
+- [x] **P5-23** Allow a small per-pixel tolerance so rasteriser updates don't break CI spuriously.
+- [x] **P5-24** Benchmark a single render; assert it stays under ~2 ms.
 - [ ] **P5-25** Visually verify on a real Linux panel, the macOS menu bar, and the Windows notification area. 🔴
 
 ---
