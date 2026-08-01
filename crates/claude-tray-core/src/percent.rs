@@ -76,6 +76,18 @@ impl Percent {
     pub fn value(self) -> f64 {
         self.0
     }
+
+    /// Builds a percentage from a literal that is in range by inspection.
+    ///
+    /// Exists only for `const` items — [`Percent::new`] returns a `Result`,
+    /// which no `const` can unwrap without panicking, and panicking is
+    /// forbidden in this crate. Crate-private on purpose: the invariant here is
+    /// upheld by reading the source, which is only sound for values written out
+    /// as literals, and each use is covered by a test that compares it against
+    /// [`Percent::new`].
+    pub(crate) const fn from_literal(value: f64) -> Self {
+        Self(value)
+    }
 }
 
 /// Maps `-0.0` onto `+0.0` so that equality and ordering agree.

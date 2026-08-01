@@ -1,9 +1,12 @@
 //! Quota windows — the rolling periods a plan's limits are measured over.
 
 use core::fmt;
+use core::time::Duration;
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
+
+use crate::Percent;
 
 /// Which quota period a window measures.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
@@ -95,21 +98,64 @@ impl UsageWindow {
         self
     }
 
-    /// Whether this window carries a usable limit.
+    /// Returns the allowance size, if the source reported a usable one.
     ///
     /// A limit of zero is treated as unknown rather than as "instantly
     /// exhausted": no real plan has a zero allowance, so a zero far more likely
     /// means the source had nothing to report.
     #[must_use]
+    pub fn known_limit(&self) -> Option<u64> {
+        self.limit.filter(|&limit| limit > 0)
+    }
+
+    /// Whether this window carries a usable limit.
+    #[must_use]
     pub fn is_measurable(&self) -> bool {
-        self.limit.is_some_and(|limit| limit > 0)
+        self.known_limit().is_some()
+    }
+
+    /// Returns how much of the allowance is left, as a percentage.
+    ///
+    /// `None` for a window with no usable limit — there is nothing to take a
+    /// percentage of. Usage beyond the limit reads as zero remaining rather
+    /// than as a negative: providers do report overage, and "less than empty"
+    /// is not something the icon can draw.
+    #[must_use]
+    pub fn remaining_percent(&self) -> Option<Percent> {
+        let limit = self.known_limit()?;
+        let remaining = limit.saturating_sub(self.used);
+
+        // Both are tallies of tokens or messages, orders of magnitude below the
+        // 2^53 point where `f64` stops representing integers exactly.
+        #[allow(clippy::cast_precision_loss)]
+        let ratio = remaining as f64 / limit as f64;
+
+        Percent::saturating(ratio * 100.0).ok()
+    }
+
+    /// Returns how long until the allowance refills.
+    ///
+    /// `None` if the source did not report a reset time. A reset time that has
+    /// already passed reads as zero rather than as a negative duration — the
+    /// refill is due, and the next snapshot will say so.
+    #[must_use]
+    pub fn time_until_reset(&self, now: DateTime<Utc>) -> Option<Duration> {
+        let resets_at = self.resets_at?;
+        Some(
+            resets_at
+                .signed_duration_since(now)
+                .to_std()
+                .unwrap_or(Duration::ZERO),
+        )
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::{UsageWindow, WindowKind};
+    use crate::Percent;
     use chrono::{DateTime, Utc};
+    use core::time::Duration;
 
     fn instant(text: &str) -> DateTime<Utc> {
         text.parse().unwrap()
@@ -163,6 +209,72 @@ mod tests {
         );
         let json = serde_json::to_string(&window).unwrap();
         assert_eq!(serde_json::from_str::<UsageWindow>(&json).unwrap(), window);
+    }
+
+    #[test]
+    fn remaining_percent_is_the_unused_share_of_the_limit() {
+        let window = UsageWindow::new(
+            WindowKind::Session,
+            40,
+            200,
+            instant("2026-08-01T12:00:00Z"),
+        );
+        assert_eq!(window.remaining_percent(), Percent::new(80.0).ok());
+    }
+
+    #[test]
+    fn an_unmeasurable_window_has_no_remaining_percent() {
+        assert_eq!(
+            UsageWindow::unbounded(WindowKind::Weekly, 40).remaining_percent(),
+            None
+        );
+    }
+
+    /// Providers do report usage past the limit. It reads as empty, not as a
+    /// negative percentage the icon could not draw.
+    #[test]
+    fn overage_reads_as_empty_rather_than_negative() {
+        let window = UsageWindow::new(
+            WindowKind::Session,
+            250,
+            200,
+            instant("2026-08-01T12:00:00Z"),
+        );
+        assert_eq!(window.remaining_percent(), Some(Percent::ZERO));
+    }
+
+    #[test]
+    fn an_untouched_window_is_full() {
+        let window = UsageWindow::new(WindowKind::Monthly, 0, 200, instant("2026-09-01T00:00:00Z"));
+        assert_eq!(window.remaining_percent(), Some(Percent::FULL));
+    }
+
+    #[test]
+    fn time_until_reset_counts_down_to_the_refill() {
+        let window = UsageWindow::new(WindowKind::Session, 1, 10, instant("2026-08-01T12:30:00Z"));
+        assert_eq!(
+            window.time_until_reset(instant("2026-08-01T10:42:00Z")),
+            Some(Duration::from_mins(108)),
+        );
+    }
+
+    /// A reset that is already due counts as zero, not as a negative duration.
+    #[test]
+    fn a_passed_reset_time_reads_as_zero() {
+        let window = UsageWindow::new(WindowKind::Session, 1, 10, instant("2026-08-01T09:00:00Z"));
+        assert_eq!(
+            window.time_until_reset(instant("2026-08-01T10:42:00Z")),
+            Some(Duration::ZERO)
+        );
+    }
+
+    #[test]
+    fn a_window_without_a_reset_time_has_no_countdown() {
+        assert_eq!(
+            UsageWindow::unbounded(WindowKind::Weekly, 40)
+                .time_until_reset(instant("2026-08-01T10:42:00Z")),
+            None
+        );
     }
 
     #[test]

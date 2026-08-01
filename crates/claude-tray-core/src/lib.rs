@@ -23,20 +23,35 @@
 //! application holds exactly one [`UsageState`], which is either a snapshot
 //! (current or stale) or a reason there isn't one.
 //!
+//! # From a snapshot to an icon
+//!
+//! [`UsageSnapshot::remaining_percent`] picks the most constrained window and
+//! reports what is left of it. That single [`Percent`] becomes a
+//! [`ColorState`] via configurable [`Thresholds`] and a [`BatteryLevel`] via
+//! quantisation, each optionally passed through [`Hysteresis`] so a figure
+//! resting on a boundary does not flicker the icon.
+//!
 //! # Status
 //!
-//! Types only. Percentages, colour states, and the notification engine arrive
-//! in the rest of roadmap phase 2.
+//! The notification engine arrives in the rest of roadmap phase 2.
 
 // Tests are allowed the ergonomic panicking helpers that library code is not.
 #![cfg_attr(test, allow(clippy::unwrap_used, clippy::expect_used, clippy::panic))]
 
+mod battery;
+mod color;
+mod duration;
+mod hysteresis;
 mod percent;
 mod plan;
 mod snapshot;
 mod state;
 mod window;
 
+pub use battery::BatteryLevel;
+pub use color::{ColorState, Thresholds, ThresholdsError};
+pub use duration::{UNKNOWN, humanize_duration};
+pub use hysteresis::Hysteresis;
 pub use percent::{Percent, PercentError};
 pub use plan::Plan;
 pub use snapshot::{Source, UsageSnapshot};
